@@ -1,5 +1,18 @@
 #include "ofApp.h"
 
+/*
+
+ Test/bench results for different downscaling methods on a ton of images
+
+ interpolation      |  cpu time  |  quality
+--------------------+------------+-------------
+ cv::INTER_NEAREST  |    38sec   |   crap
+ cv::INTER_LINEAR   |    39sec   |   less crap but still crap
+ cv::INTER_CUBIC    |    40sec   |   looks same as linear - moire everywhere
+ cv::INTER_AREA     |    87sec   |   amazing
+ cv::INTER_LANCZOS4 |    46sec   |   lots of moire
+
+ */
 
 void ofApp::setup(){
 
@@ -9,14 +22,23 @@ void ofApp::setup(){
 	dir.listDir("images");
 
 	bool overwrite = true; //if file is already there, should we re-write it?
+	bool keepAspectRatio = true; 	//should we resize blindly to the specified size,
+									//or fit the original img size into your specified size?
+	ofVec2f imgSize = ofVec2f(512,512);
+	cv::InterpolationFlags scalingMethod = cv::INTER_AREA; //resize quality / time
 
 	for(int i = 0; i < dir.size(); i++){
+
 		if (dir.getFile(i).isFile()){
 			string img = dir.getPath(i);
 			string imgDst = "smallImages/" + dir.getFile(i).getFileName();
-			ofVec2f imgSize = ofVec2f(512,512);
-
-			ofxImageResizer::one().resizeImage(img, imgDst, imgSize, overwrite, OF_INTERPOLATE_BICUBIC);
+			ofxImageResizer::one().resizeImage(img,
+											   imgDst,
+											   imgSize,
+											   overwrite,
+											   keepAspectRatio,
+											   scalingMethod
+											   );
 		}
 	}
 }

@@ -8,12 +8,14 @@
 
 #include "ofxImageResizer.h"
 
+
 float ofxImageResizer::busyTime = 0.0;
 
 ofxImageResizer::ofxImageResizer(){
 
 	ofAddListener(ofEvents().update, this, &ofxImageResizer::update);
 	maxNumThreads = MAX(1,std::thread::hardware_concurrency() - 1);
+	ofLogNotice("ofxImageResizer") << "operations will be limited to " << maxNumThreads << " threads.";
 }
 
 
@@ -21,9 +23,10 @@ void ofxImageResizer::resizeImage(const string & imgSrc,
 								  const string & imgDst,
 								  ofVec2f targetImgSize,
 								  bool overwrite,
-								  ofInterpolationMethod interpol){
+								  bool keepOriginalImgAspectRatio,
+								  cv::InterpolationFlags scalingMethod){
 
-	ResizeJob job = {imgSrc, imgDst, targetImgSize, overwrite, interpol};
+	ResizeJob job = {imgSrc, imgDst, targetImgSize, overwrite, keepOriginalImgAspectRatio, scalingMethod};
 	pendingJobs.push_back(job);
 }
 
@@ -39,8 +42,20 @@ void ofxImageResizer::executeJob(ofxImageResizer::ResizeJob job, bool * finished
 		ofPixels original;
 		bool ok = ofLoadImage(original, job.imgSrc);
 		if (ok){
-			original.resize(job.imgSize.x, job.imgSize.y);
-			ofSaveImage(original, job.imgDst);
+			//original.resize(job.imgSize.x, job.imgSize.y); //leads to ugly results, no matter the interpolation method
+			int dstW = job.imgSize.x;
+			int dstH = job.imgSize.y;
+			if(job.keepOriginalImgAspectRatio){
+				ofRectangle orSize = ofRectangle(0,0, original.getWidth(), original.getHeight());
+				ofRectangle target = ofRectangle(0,0, dstW, dstH);
+				orSize.scaleTo(target);
+				dstW = orSize.width;
+				dstH = orSize.height;
+			}
+			ofPixels dst;
+			dst.allocate(dstW, dstH, original.getNumChannels());
+			ofxCv::resize(original, dst, job.inter); //use opencv for fast & nice resizing
+			ofSaveImage(dst, job.imgDst);
 		}else{
 			ofLogError("ofxImageResizer") << "cant load image for resizing! '" << job.imgSrc << "'";
 		}

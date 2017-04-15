@@ -8,6 +8,7 @@
 
 #pragma once
 #include "ofMain.h"
+#include "ofxCv.h"
 
 class ofxImageResizer{
 
@@ -22,18 +23,22 @@ public:
 					 const string & imgDst,
 					 ofVec2f targetImgSize,
 					 bool overwrite,
-					 ofInterpolationMethod interpol = OF_INTERPOLATE_BICUBIC
+					 bool keepOriginalImgAspectRatio = true,
+					 cv::InterpolationFlags scalingMethod = cv::INTER_AREA
 					 );
 
 	void update(ofEventArgs &);
 	void draw(int x, int y);
+
+	void setMaxThreads(unsigned t){maxNumThreads = MAX(1,t);};
 
 	struct ResizeJob{
 		string imgSrc;
 		string imgDst;
 		ofVec2f imgSize;
 		bool overwrite;
-		ofInterpolationMethod inter;
+		bool keepOriginalImgAspectRatio;
+		cv::InterpolationFlags inter;
 	};
 
 protected:
