@@ -9,7 +9,7 @@
  cv::INTER_NEAREST  |    38sec   |   crap
  cv::INTER_LINEAR   |    39sec   |   less crap but still crap
  cv::INTER_CUBIC    |    40sec   |   looks same as linear - moire everywhere
- cv::INTER_AREA     |    87sec   |   amazing
+ cv::INTER_AREA     |    42sec   |   amazing! best choice by far
  cv::INTER_LANCZOS4 |    46sec   |   lots of moire
 
  */
