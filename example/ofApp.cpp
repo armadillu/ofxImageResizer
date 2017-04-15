@@ -27,6 +27,8 @@ void ofApp::setup(){
 	ofVec2f imgSize = ofVec2f(512,512);
 	cv::InterpolationFlags scalingMethod = cv::INTER_AREA; //resize quality / time
 
+	ofxImageResizer::one().setMaxThreads(8);
+
 	for(int i = 0; i < dir.size(); i++){
 
 		if (dir.getFile(i).isFile()){
