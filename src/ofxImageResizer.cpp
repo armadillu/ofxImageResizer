@@ -28,13 +28,33 @@ void ofxImageResizer::resizeImage(const string & imgSrc,
 								  ofImageQualityType quality){
 
 	ResizeJob job = {imgSrc, imgDst, targetImgSize, overwrite, keepOriginalImgAspectRatio, scalingMethod, quality};
-	pendingJobs.push_back(job);
+//	bool alreadyExists = false;
+//	if(!job.overwrite){ //if asked to not overwrite, check if file is there
+//		alreadyExists = ofFile::doesFileExist(job.imgDst);
+//	}
+//	if(!alreadyExists){
+	lock();
+		pendingJobs.push_back(job);
+	unlock();
+//	}
+
+}
+
+void ofxImageResizer::update(ofEventArgs &){
+
+	lock();
+	int pending = pendingJobs.size();
+	unlock();
+
+	if(pending > 0 && !isThreadRunning()){
+		startThread();
+	}
 }
 
 
 void ofxImageResizer::executeJob(ofxImageResizer::ResizeJob job, bool * finished){
 
-	float t = ofGetElapsedTimef();
+	//float t = ofGetElapsedTimef();
 	bool alreadyExists = false;
 	if(!job.overwrite){ //if asked to not overwrite, check if file is there
 		alreadyExists = ofFile::doesFileExist(job.imgDst);
@@ -60,37 +80,63 @@ void ofxImageResizer::executeJob(ofxImageResizer::ResizeJob job, bool * finished
 		}else{
 			ofLogError("ofxImageResizer") << "cant load image for resizing! '" << job.imgSrc << "'";
 		}
-
 	}
-	busyTime += ofGetElapsedTimef() - t;
+	//busyTime += ofGetElapsedTimef() - t;
 	*finished = true;
 }
 
+bool ofxImageResizer::isBusy(){
+	int pending = 0;
+	lock();
+	pending = pendingJobs.size();
+	unlock();
+	return pending > 0;
+};
 
-void ofxImageResizer::update(ofEventArgs &){
+void ofxImageResizer::threadedFunction(){
 
-	//check for threads that are done and cleanup
-	for(int i = activeThreads.size() - 1; i >= 0; i--){
-		ThreadInfo * t = activeThreads[i];
-		if(t->finished){ //thread done!
-			delete t->thread;
-			delete t;
-			activeThreads.erase(activeThreads.begin() + i);
+	int pending = 0;
+	lock();
+	pending = pendingJobs.size();
+	unlock();
+
+	while(isThreadRunning() && pending > 0){
+		//check for threads that are done and cleanup
+		for(int i = activeThreads.size() - 1; i >= 0; i--){
+			ThreadInfo * t = activeThreads[i];
+			if(t->finished){ //thread done!
+				delete t->thread;
+				delete t;
+				activeThreads.erase(activeThreads.begin() + i);
+			}
 		}
-	}
 
+		//see if there are pending jobs
+		lock();
+		pending = pendingJobs.size();
+		unlock();
 
-	//see if there are pending jobs
-	while (pendingJobs.size() && activeThreads.size() < maxNumThreads){
+		while (pending > 0 && activeThreads.size() < maxNumThreads){
 
-		ResizeJob job = pendingJobs.front();
-		pendingJobs.erase(pendingJobs.begin());
+			ResizeJob job;
+			lock();
+			job = pendingJobs.front();
+			pendingJobs.erase(pendingJobs.begin());
+			pending--;
+			unlock();
 
-		ThreadInfo *ti = new ThreadInfo();
-		ti->finished = false;
-		ti->thread = new std::thread(&ofxImageResizer::executeJob, job, &ti->finished);
-		ti->thread->detach();
-		activeThreads.push_back(ti);
+			bool alreadyExists = false;
+			if(!job.overwrite){ //if asked to not overwrite, check if file is there
+				alreadyExists = ofFile::doesFileExist(job.imgDst);
+			}
+			if(!alreadyExists){
+				ThreadInfo *ti = new ThreadInfo();
+				ti->finished = false;
+				ti->thread = new std::thread(&ofxImageResizer::executeJob, job, &ti->finished);
+				ti->thread->detach();
+				activeThreads.push_back(ti);
+			}
+		}
 	}
 }
 
@@ -103,7 +149,11 @@ void ofxImageResizer::draw(int x, int y){
 	}else{
 		msg += "idle";
 	}
-	msg += "\nPending Jobs: " + ofToString(pendingJobs.size());
-	msg += "\nTotal Busy Time: " + ofToString(busyTime,2);
+	lock();
+	int pending = pendingJobs.size();
+	unlock();
+
+	msg += "\nPending Jobs: " + ofToString(pending);
+	//msg += "\nTotal Busy Time: " + ofToString(busyTime,2);
 	ofDrawBitmapStringHighlight(msg, x, y);
 }

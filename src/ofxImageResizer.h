@@ -10,7 +10,7 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 
-class ofxImageResizer{
+class ofxImageResizer : public ofThread{
 
 public:
 	
@@ -32,7 +32,7 @@ public:
 	void draw(int x, int y);
 
 	void setMaxThreads(unsigned t){maxNumThreads = MAX(1,t);};
-	bool isBusy(){return pendingJobs.size() > 0;};
+	bool isBusy();
 
 	struct ResizeJob{
 		string imgSrc;
@@ -46,6 +46,7 @@ public:
 
 protected:
 
+	void threadedFunction();
 
 	struct ThreadInfo{
 		std::thread * thread;
