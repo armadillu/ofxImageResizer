@@ -24,13 +24,15 @@ public:
 					 ofVec2f targetImgSize,
 					 bool overwrite,
 					 bool keepOriginalImgAspectRatio = true,
-					 cv::InterpolationFlags scalingMethod = cv::INTER_AREA
+					 cv::InterpolationFlags scalingMethod = cv::INTER_AREA,
+					 ofImageQualityType quality = OF_IMAGE_QUALITY_HIGH
 					 );
 
 	void update(ofEventArgs &);
 	void draw(int x, int y);
 
 	void setMaxThreads(unsigned t){maxNumThreads = MAX(1,t);};
+	bool isBusy(){return pendingJobs.size() > 0;};
 
 	struct ResizeJob{
 		string imgSrc;
@@ -39,6 +41,7 @@ public:
 		bool overwrite;
 		bool keepOriginalImgAspectRatio;
 		cv::InterpolationFlags inter;
+		ofImageQualityType quality;
 	};
 
 protected:

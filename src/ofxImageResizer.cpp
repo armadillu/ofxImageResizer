@@ -24,9 +24,10 @@ void ofxImageResizer::resizeImage(const string & imgSrc,
 								  ofVec2f targetImgSize,
 								  bool overwrite,
 								  bool keepOriginalImgAspectRatio,
-								  cv::InterpolationFlags scalingMethod){
+								  cv::InterpolationFlags scalingMethod,
+								  ofImageQualityType quality){
 
-	ResizeJob job = {imgSrc, imgDst, targetImgSize, overwrite, keepOriginalImgAspectRatio, scalingMethod};
+	ResizeJob job = {imgSrc, imgDst, targetImgSize, overwrite, keepOriginalImgAspectRatio, scalingMethod, quality};
 	pendingJobs.push_back(job);
 }
 
@@ -55,7 +56,7 @@ void ofxImageResizer::executeJob(ofxImageResizer::ResizeJob job, bool * finished
 			ofPixels dst;
 			dst.allocate(dstW, dstH, original.getNumChannels());
 			ofxCv::resize(original, dst, job.inter); //use opencv for fast & nice resizing
-			ofSaveImage(dst, job.imgDst);
+			ofSaveImage(dst, job.imgDst, job.quality); //TODO test opencv saving vs freeimage saving to decide what's best here
 		}else{
 			ofLogError("ofxImageResizer") << "cant load image for resizing! '" << job.imgSrc << "'";
 		}
@@ -98,10 +99,11 @@ void ofxImageResizer::draw(int x, int y){
 
 	string msg = "ofxImageResizer: ";
 	if(activeThreads.size()){
-		msg += "busy(" + ofToString(activeThreads.size()) + ")";
+		msg += "busy(" + ofToString(activeThreads.size()) + " threads)";
 	}else{
 		msg += "idle";
 	}
+	msg += "\nPending Jobs: " + ofToString(pendingJobs.size());
 	msg += "\nTotal Busy Time: " + ofToString(busyTime,2);
 	ofDrawBitmapStringHighlight(msg, x, y);
 }
