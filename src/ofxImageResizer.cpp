@@ -138,6 +138,7 @@ void ofxImageResizer::threadedFunction(){
 			}
 		}
 	}
+	ofLogNotice("ofxImageResizer") << "dispatch thread exiting - done"; 
 }
 
 
