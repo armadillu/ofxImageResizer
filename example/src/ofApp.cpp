@@ -26,9 +26,9 @@ void ofApp::setup(){
 									//or fit the original img size into your specified size?
 	ofVec2f imgSize = ofVec2f(512,512);
 	cv::InterpolationFlags scalingMethod = cv::INTER_AREA; //resize quality / time
-	ofImageQualityType savedImageQuality = OF_IMAGE_QUALITY_MEDIUM;
+	ofImageQualityType savedImageQuality = OF_IMAGE_QUALITY_BEST;
 
-	ofxImageResizer::one().setMaxThreads(8);
+	ofxImageResizer::one().setMaxThreads(2);
 
 	for(int i = 0; i < dir.size(); i++){
 
