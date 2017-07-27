@@ -21,7 +21,7 @@ void ofApp::setup(){
 	ofDirectory dir;
 	dir.listDir("images");
 
-	bool overwrite = false; //if file is already there, should we re-write it?
+	bool overwrite = true; //if file is already there, should we re-write it?
 	bool keepAspectRatio = true; 	//should we resize blindly to the specified size,
 									//or fit the original img size into your specified size?
 	ofVec2f imgSize = ofVec2f(512,512);

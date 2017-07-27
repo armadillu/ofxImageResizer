@@ -101,6 +101,7 @@ void ofxImageResizer::threadedFunction(){
 	unlock();
 
 	while(isThreadRunning() && pending > 0){
+
 		//check for threads that are done and cleanup
 		for(int i = activeThreads.size() - 1; i >= 0; i--){
 			ThreadInfo * t = activeThreads[i];
@@ -138,15 +139,28 @@ void ofxImageResizer::threadedFunction(){
 			}
 		}
 	}
-	ofLogNotice("ofxImageResizer") << "dispatch thread exiting - done"; 
+
+	while(activeThreads.size() > 0){
+		for(int i = activeThreads.size() - 1; i >= 0; i--){ 		//check for threads that are done and cleanup
+
+			ThreadInfo * t = activeThreads[i];
+			if(t->finished){ //thread done!
+				delete t->thread;
+				delete t;
+				activeThreads.erase(activeThreads.begin() + i);
+			}
+		}
+		ofSleepMillis(1);
+	}
+	ofLogNotice("ofxImageResizer") << "dispatch thread exiting - done";
 }
 
 
 void ofxImageResizer::draw(int x, int y){
 
 	string msg = "ofxImageResizer: ";
-	if(activeThreads.size()){
-		msg += "busy(" + ofToString(activeThreads.size()) + " threads)";
+	if(isBusy()){
+		msg += "busy";
 	}else{
 		msg += "idle";
 	}

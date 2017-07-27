@@ -1,0 +1,3 @@
+ofxImageResizer
+ofxOpenCv
+ofxCv
