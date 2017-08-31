@@ -19,8 +19,8 @@ public:
 		return instance;
 	}
 
-	void resizeImage(const string & imgSrc,
-					 const string & imgDst,
+	void resizeImage(const std::string & imgSrc,
+					 const std::string & imgDst,
 					 ofVec2f targetImgSize,
 					 bool overwrite,
 					 bool keepOriginalImgAspectRatio = true,
@@ -35,8 +35,8 @@ public:
 	bool isBusy();
 
 	struct ResizeJob{
-		string imgSrc;
-		string imgDst;
+		std::string imgSrc;
+		std::string imgDst;
 		ofVec2f imgSize;
 		bool overwrite;
 		bool keepOriginalImgAspectRatio;
@@ -53,8 +53,8 @@ protected:
 		bool finished;
 	};
 
-	vector<ResizeJob> pendingJobs;
-	vector<ThreadInfo*> activeThreads;
+	std::vector<ResizeJob> pendingJobs;
+	std::vector<ThreadInfo*> activeThreads;
 
 	static void executeJob(ofxImageResizer::ResizeJob job, bool * finished);
 

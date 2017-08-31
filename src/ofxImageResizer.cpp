@@ -11,6 +11,8 @@
 
 float ofxImageResizer::busyTime = 0.0;
 
+using namespace std;
+
 ofxImageResizer::ofxImageResizer(){
 
 	ofAddListener(ofEvents().update, this, &ofxImageResizer::update);
